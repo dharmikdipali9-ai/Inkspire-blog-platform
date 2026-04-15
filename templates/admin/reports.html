@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reports Center | Inkspire Admin</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='uploads/favicon.png') }}"/>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --ink-midnight: #0f172a;
+            --ink-gold: #ffc107;
+            --ink-bg: #f1f5f9;
+            --ink-danger: #e11d48;
+            --sidebar-width: 280px;
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--ink-bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--ink-midnight);
+            margin: 0;
+            display: flex;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--ink-midnight);
+            position: fixed;
+            left: 0; top: 0;
+            padding: 2.5rem 1.5rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h4 { color: #fff; font-weight: 800; margin-bottom: 3.5rem; display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
+        .sidebar h4 i { color: var(--ink-gold); }
+
+        .nav-link {
+            display: flex;
+            align-items: center; gap: 12px;
+            color: #94a3b8; padding: 14px 18px;
+            border-radius: 14px; margin-bottom: 10px;
+            font-weight: 600; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); transform: translateX(5px); }
+        .nav-link.active { background: var(--ink-gold); color: var(--ink-midnight); box-shadow: 0 10px 20px -5px rgba(255, 193, 7, 0.4); }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            padding: 2rem 2.5rem;
+            background: radial-gradient(circle at top right, #ffffff, var(--ink-bg));
+        }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            padding: 1.25rem 2rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--card-shadow);
+            position: sticky;
+            top: 1.5rem;
+            z-index: 900;
+        }
+
+        /* ===== DATA CARD ===== */
+        .data-card {
+            background: #fff;
+            border-radius: 28px;
+            padding: 2rem;
+            border: 1px solid rgba(0,0,0,0.02);
+            box-shadow: var(--card-shadow);
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            border: none;
+            padding: 1.2rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 700;
+            color: #94a3b8;
+            border-radius: 12px;
+        }
+
+        .table td { padding: 1.5rem 1rem; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+
+        .report-id {
+            font-family: monospace;
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        .reason-badge {
+            background: #fff1f2;
+            color: var(--ink-danger);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid #fee2e2;
+            display: inline-block;
+        }
+
+        .blog-ref-btn {
+            font-size: 0.75rem;
+            color: var(--ink-midnight);
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            padding: 8px 14px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+        .blog-ref-btn:hover { background: var(--ink-midnight); color: #fff; transform: translateY(-2px); }
+
+        .status-pill {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border-radius: 50px;
+            letter-spacing: 0.5px;
+        }
+        .status-resolved { background: #ecfdf5; color: #059669; border: 1px solid #10b98120; }
+        .status-pending { background: #fffbeb; color: #d97706; border: 1px solid #f59e0b20; }
+
+        .btn-action {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            border: 1px solid #f1f5f9;
+        }
+
+        .btn-resolve { background: #f0fdf4; color: #16a34a; margin-right: 8px; border-color: #dcfce7; }
+        .btn-resolve:hover { background: #16a34a; color: #fff; transform: translateY(-3px); }
+        
+        .btn-del { background: #fff1f2; color: var(--ink-danger); border-color: #fee2e2; }
+        .btn-del:hover { background: var(--ink-danger); color: #fff; transform: translateY(-3px); }
+
+        .search-input {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 12px 20px;
+            width: 100%;
+            max-width: 400px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+        .search-input:focus { outline: none; border-color: var(--ink-gold); box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.1); }
+
+        /* ===== THEMED SWEETALERT CUSTOMIZATION ===== */
+        .swal2-popup {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            border-radius: 28px !important;
+            padding: 2rem !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        }
+        .swal2-title { font-weight: 800 !important; font-size: 1.4rem !important; color: var(--ink-midnight) !important; }
+        .swal2-html-container { font-weight: 500 !important; color: #64748b !important; }
+        .swal2-confirm {
+            border-radius: 14px !important;
+            font-weight: 700 !important;
+            padding: 12px 30px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+            font-size: 0.8rem !important;
+        }
+        .swal2-cancel {
+            border-radius: 14px !important;
+            font-weight: 700 !important;
+            padding: 12px 30px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+            font-size: 0.8rem !important;
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .main-wrapper { margin-left: 0; width: 100%; padding: 1.5rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar" id="sidebar">
+    <h4><i class="bi bi-feather"></i> Inkspire</h4>
+    <nav class="nav flex-column">
+        <a href="/admin" class="nav-link"><i class="bi bi-grid-fill"></i> Dashboard</a>
+        <a href="/admin/users" class="nav-link"><i class="bi bi-people-fill"></i> Users</a>
+        <a href="/admin/blogs" class="nav-link"><i class="bi bi-file-earmark-post-fill"></i> Blogs</a>
+        <a href="/admin/comments" class="nav-link"><i class="bi bi-chat-square-dots-fill"></i> Comments</a>
+        <a href="/admin/reports" class="nav-link active d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-shield-fill-exclamation"></i> Reports</span>
+            {% if report_count > 0 %}<span class="badge bg-danger rounded-pill shadow-sm">{{ report_count }}</span>{% endif %}
+        </a>
+        <a href="/admin/requests" class="nav-link d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-envelope-paper-fill"></i> Requests</span>
+          {% if request_count > 0 %}
+          <span class="badge bg-warning text-dark rounded-pill">{{ request_count }}</span>
+          {% endif %}
+        </a>
+    </nav>
+    <div class="mt-auto">
+        <a href="/admin-logout" class="nav-link text-danger"><i class="bi bi-power"></i> Logout</a>
+    </div>
+</aside>
+
+<main class="main-wrapper">
+    <header class="topbar">
+        <div>
+            <h5 class="fw-800 mb-0">Safety & Reports</h5>
+            <p class="text-muted small mb-0">Reviewing community flags and content violations</p>
+        </div>
+        <button class="btn d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list fs-2"></i></button>
+    </header>
+
+    <div class="mb-4">
+        <input type="text" class="search-input shadow-sm" placeholder="Filter by reason or reporter..." id="reportSearch">
+    </div>
+
+    <div class="data-card">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Report ID</th>
+                        <th>Reason for Flag</th>
+                        <th>Reporter</th>
+                        <th>Target Content</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody">
+                    {% for report, user, blog in reports %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="report-id">#{{ report.id }}</span>
+                        </td>
+                        <td>
+                            <div class="reason-badge">{{ report.reason }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-800 small text-uppercase" style="letter-spacing: 0.5px;">{{ user.username }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem; font-weight: 600;">{{ report.created_at.strftime('%d %b %Y') }}</div>
+                        </td>
+                        <td>
+                            <a href="/blog/{{ blog.id }}" class="blog-ref-btn">
+                                <i class="bi bi-eye-fill"></i> View Content
+                            </a>
+                        </td>
+                        <td>
+                            {% if report.is_resolved %}
+                            <span class="status-pill status-resolved">Resolved</span>
+                            {% else %}
+                            <span class="status-pill status-pending">Awaiting Action</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="d-flex justify-content-end">
+                                {% if not report.is_resolved %}
+                                <a href="javascript:void(0)" 
+                                   onclick="confirmReportAction('resolve', {{ report.id }})" 
+                                   class="btn-action btn-resolve" title="Mark as Resolved">
+                                    <i class="bi bi-shield-check"></i>
+                                </a>
+                                {% endif %}
+                                <a href="javascript:void(0)" 
+                                   onclick="confirmReportAction('delete', {{ blog.id }})" 
+                                   class="btn-action btn-del" 
+                                   title="Delete Content">
+                                     <i class="bi bi-trash3-fill"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+    }
+
+    // Modern Themed Alerts
+    function confirmReportAction(type, id) {
+        let titleText = "";
+        let btnColor = "";
+        let iconType = "warning";
+        let url = "";
+        
+        if(type === 'resolve') {
+            titleText = "Resolve this report?";
+            btnColor = "#16a34a"; // Green
+            iconType = "success";
+            url = `/admin/resolve-report/${id}`;
+        } else {
+            titleText = "Delete reported blog?";
+            btnColor = "#e11d48"; // Danger Red
+            iconType = "error";
+            url = `/admin/delete-reported-blog/${id}`;
+        }
+
+        Swal.fire({
+            title: titleText,
+            text: type === 'delete' ? "Warning: This will permanently remove the content." : "Mark this issue as settled.",
+            icon: iconType,
+            showCancelButton: true,
+            confirmButtonColor: btnColor,
+            cancelButtonColor: '#f1f5f9',
+            confirmButtonText: 'Yes, proceed',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            iconColor: (iconType === 'warning' ? '#ffc107' : '')
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        });
+    }
+
+    // Reports Search Filter
+    document.getElementById('reportSearch').addEventListener('keyup', function() {
+        let val = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#reportTableBody tr');
+        
+        rows.forEach(row => {
+            let reason = row.querySelector('.reason-badge').innerText.toLowerCase();
+            let reporter = row.querySelector('.fw-800').innerText.toLowerCase();
+            row.style.display = (reason.includes(val) || reporter.includes(val)) ? '' : 'none';
+        });
+    });
+</script>
+
+</body>
+</html>

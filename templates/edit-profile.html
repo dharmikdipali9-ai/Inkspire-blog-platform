@@ -1,0 +1,113 @@
+{% extends 'base.html' %} 
+
+{% block title %} Edit Profile {% endblock %} 
+
+{% block content %}
+<div class="container py-5">
+  <div class="card border-0 shadow-lg mx-auto rounded-4 overflow-hidden" style="max-width: 550px; background: var(--card-bg);">
+    
+    <div class="position-relative" style="height: 120px; background: linear-gradient(135deg, var(--primary-accent), #4338ca);">
+      <div class="position-absolute start-50 translate-middle-x" style="bottom: -50px; z-index: 2;">
+        <div class="position-relative">
+          <img id="preview" 
+               src="{{ url_for('static', filename='uploads/' + user.profile_pic) if user.profile_pic else 'https://via.placeholder.com/120' }}" 
+               class="rounded-circle border border-4 border-white shadow" 
+               width="130" height="130" style="object-fit: cover; background: #fff;">
+          
+          <label for="profileInput" class="position-absolute bottom-0 end-0 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center hover-scale" 
+                 style="width: 35px; height: 35px; cursor: pointer; border: 1px solid #eee;">
+            <i class="fa-solid fa-camera text-primary small"></i>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-4 p-md-5 pt-5"> <form method="POST" enctype="multipart/form-data" class="mt-4">
+
+        <input type="file" name="profile_pic" id="profileInput" class="d-none" accept="image/*">
+
+        <div class="text-center mb-4">
+          <h4 class="fw-bold mb-1">{{ user.username }}</h4>
+          <p class="text-muted small">Update your personal details</p>
+        </div>
+
+        <div class="mb-4">
+          <div class="d-flex justify-content-between">
+            <label class="form-label fw-semibold small mb-1">About You</label>
+            <span id="charCount" class="text-muted extra-small">0/150</span>
+          </div>
+          <textarea 
+            name="bio" 
+            id="bioTextarea"
+            class="form-control custom-input shadow-sm p-3" 
+            rows="4" 
+            maxlength="150"
+            placeholder="Tell the world your story..."
+            style="resize: none; border-radius: 12px;"
+          >{{ user.bio }}</textarea>
+        </div>
+
+        <div class="d-grid gap-2 pt-2">
+          <button type="submit" class="btn btn-primary py-2 rounded-pill fw-bold shadow-sm transition-hover">
+            Save Profile
+          </button>
+          <a href="/" class="btn btn-link text-decoration-none text-muted small">Discard Changes</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .extra-small { font-size: 0.7rem; }
+  
+  /* Input Styling */
+  .custom-input {
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .custom-input:focus {
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+    background-color: #fff;
+  }
+
+  /* Hover Effects */
+  .hover-scale { transition: transform 0.2s ease; }
+  .hover-scale:hover { transform: scale(1.1); }
+
+  .transition-hover {
+    transition: all 0.3s ease;
+  }
+
+  .transition-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(99, 102, 241, 0.2) !important;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Image Preview logic
+  document.getElementById('profileInput').onchange = function (evt) {
+    const [file] = this.files;
+    if (file) {
+      document.getElementById('preview').src = URL.createObjectURL(file);
+    }
+  }
+
+  // Character Counter logic
+  const bioArea = document.getElementById('bioTextarea');
+  const charCount = document.getElementById('charCount');
+
+  function updateCount() {
+    charCount.textContent = `${bioArea.value.length}/150`;
+  }
+
+  bioArea.addEventListener('input', updateCount);
+  updateCount(); // Run on load
+</script>
+{% endblock %}

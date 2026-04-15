@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %} {% endblock %}</title>
+    <link
+      href="https://cdn.quilljs.com/1.3.6/quill.snow.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='uploads/favicon.png') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/bootstrap.min.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+      :root {
+        --bg-color: #ffffff;
+        --text-color: #000000;
+      }
+      [data-theme="dark"] {
+        --bg-color: #121212;
+        --text-color: #ffffff;
+      }
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+      }
+      :root {
+        --bg-color: #f5f7fb;
+        --card-bg: #ffffff;
+        --text-color: #111827;
+        --muted-text: #6b7280;
+        --border-color: #e5e7eb;
+      }
+
+      [data-theme="dark"] {
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --text-color: #f1f5f9;
+        --muted-text: #94a3b8;
+        --border-color: #334155;
+      }
+
+      /* ALL cards */
+      .card,
+      .modal-content,
+      .dropdown-menu {
+        background: var(--card-bg);
+        color: var(--text-color);
+        border-color: var(--border-color);
+      }
+
+      /* Muted text */
+      .text-muted {
+        color: var(--muted-text) !important;
+      }
+
+      /* Borders */
+      hr,
+      .border {
+        border-color: var(--border-color) !important;
+      }
+
+      /* Override bootstrap */
+      .text-dark {
+        color: var(--text-color) !important;
+      }
+
+      .bg-white,
+      .bg-light {
+        background: var(--card-bg) !important;
+      }
+
+      input,
+      textarea,
+      select {
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color);
+      }
+
+      input::placeholder {
+        color: var(--muted-text);
+      }
+
+      .navbar,
+      footer {
+        background: #1e1e2f;
+      }
+      .card {
+        border-radius: 15px;
+      }
+      .blog-card {
+        position: relative;
+        border-radius: 15px;
+        overflow: hidden;
+      }
+
+      /* IMAGE FIX */
+      .blog-img {
+        width: 100%;
+        height: 260px;
+        object-fit: cover; /* 🔥 FIXES IMAGE PROPERLY */
+        display: block;
+      }
+
+      /* OVERLAY GRADIENT */
+      .overlay {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.8),
+          rgba(0, 0, 0, 0.1)
+        );
+        display: flex;
+        align-items: flex-end;
+        padding: 15px;
+      }
+
+      /* TEXT STYLE */
+      .overlay-content h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .overlay-content small {
+        opacity: 0.85;
+      }
+
+      /* LIKE BUTTON */
+      .like-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        border: none;
+        background: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        cursor: pointer;
+      }
+      #scrollTopBtn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        font-size: 18px;
+        border: none;
+        outline: none;
+        background-color: #0d6efd;
+        color: white;
+        cursor: pointer;
+        padding: 12px 16px;
+        border-radius: 50%;
+        display: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+      .search-box {
+        width: 500px;
+      }
+
+      .search-box input {
+        height: 45px;
+        padding-left: 15px;
+        border-radius: 25px;
+      }
+
+      .search-box button {
+        border-radius: 25px;
+        padding: 0 18px;
+      }
+      .custom-pagination .page-link {
+        border: none;
+        color: #555;
+        font-weight: 500;
+        margin: 0 4px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+      }
+
+      .custom-pagination .page-link:hover {
+        background-color: #f2f2f2;
+        color: #1e1e2f;
+      }
+
+      .custom-pagination .page-item.active .page-link {
+        background-color: #1e1e2f;
+        color: #fff;
+        border-radius: 8px;
+      }
+
+      .custom-pagination .page-item.disabled .page-link {
+        color: #aaa;
+        background: none;
+      }
+      /* ===== MODAL DESIGN ===== */
+      /* Constrain modal width for a "Mobile App" feel on Desktop */
+      .modal-dialog {
+        max-width: 400px; /* Reduced from default 500px */
+      }
+
+      .modern-modal {
+        border: none;
+        border-radius: 24px; /* Softer corners */
+        padding: 10px;
+        background: var(--bg-color);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+
+      /* Modal Headers */
+      .modal-title-main {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: var(--text-color);
+      }
+
+      /* Refined Floating Labels */
+      .form-floating > .form-control {
+        border-radius: 14px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background-color: rgba(0, 0, 0, 0.02);
+        height: 58px;
+        padding-left: 15px;
+      }
+
+      [data-theme="dark"] .form-floating > .form-control {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .form-floating > label {
+        padding-left: 15px;
+        opacity: 0.6;
+      }
+
+      /* Password Toggle refinement */
+      .toggle-password {
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        z-index: 10;
+        font-size: 1.2rem;
+        filter: grayscale(1);
+      }
+
+      /* Button Refinement */
+      .modern-btn {
+        height: 52px;
+        border-radius: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .modern-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(13, 110, 253, 0.2);
+      }
+
+      /* Subtle separator */
+      .modal-footer-text {
+        font-size: 0.85rem;
+        color: #64748b;
+      }
+
+      /* Inputs */
+      .custom-input {
+        border-radius: 12px;
+        border: 1px solid #ddd;
+      }
+
+      .custom-input:focus {
+        border-color: #0d6efd;
+        box-shadow: none;
+      }
+
+      /* Button */
+      .modern-btn {
+        border-radius: 12px;
+        transition: 0.2s;
+      }
+
+      .modern-btn:hover {
+        transform: translateY(-1px);
+      }
+
+      /* Eye icon */
+      .toggle-password {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+      }
+      .custom-input {
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        height: 40px;
+        font-size: 14px;
+      }
+      /* Footer Base Styling */
+      .main-footer {
+        background: #0f172a; /* Deep Navy Blue */
+        color: #94a3b8;
+        position: relative;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* Title Styling */
+      .footer-title {
+        color: #ffffff;
+        font-size: 1.1rem;
+        position: relative;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+      }
+
+      .footer-title::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 30px;
+        height: 2px;
+        background: #fbbf24; /* Warning Yellow Accent */
+        border-radius: 2px;
+      }
+
+      /* Link Animations */
+      .footer-link-list li {
+        margin-bottom: 0.75rem;
+        transition: transform 0.2s ease;
+      }
+
+      .footer-link-list li:hover {
+        transform: translateX(5px);
+      }
+
+      .footer-link-list a {
+        color: #94a3b8;
+        transition: color 0.2s ease;
+        display: flex;
+        align-items: center;
+      }
+
+      .footer-link-list a:hover {
+        color: #fbbf24;
+      }
+
+      /* Icon Group */
+      .contact-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin-right: 10px;
+        color: #fbbf24;
+        font-size: 0.9rem;
+      }
+
+      /* Social Buttons */
+      .social-btn {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        color: #ffffff;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+      }
+
+      .social-btn:hover {
+        background: #fbbf24;
+        color: #0f172a;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.3);
+      }
+
+      /* Bottom Bar */
+      .footer-bottom {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1.5rem 0;
+      }
+
+      /* Scroll Top Button Refinement */
+      #scrollTopBtn {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        background: #fbbf24;
+        border: none;
+        color: #0f172a;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+      }
+
+      #scrollTopBtn:hover {
+        filter: brightness(1.1);
+        transform: scale(1.05);
+      }
+
+      /* Premium Navbar Styling */
+      .navbar {
+        background: #0f172a !important; /* Deep Navy to match footer */
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .blog-post-content {
+        text-align: justify;
+      }
+    </style>
+  </head>
+  <body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg py-2">
+      <div class="container">
+        <!-- LOGO -->
+        <a class="navbar-brand fw-bold text-light fs-3" href="/"
+          ><i class="fas fa-feather-alt me-2 text-warning"></i>Inkspire</a
+        >
+
+        <!-- SEARCH (only on lg and above) -->
+        <form
+          method="GET"
+          action="/"
+          class="d-none d-lg-flex mx-auto search-box w-50"
+        >
+          <input
+            type="text"
+            name="q"
+            class="form-control"
+            placeholder="Search blogs..."
+            value="{{ request.args.get('q', '') }}"
+          />
+          <button class="btn btn-light ms-2">
+            <i class="fa fa-search"></i>
+          </button>
+        </form>
+
+        <!-- RIGHT SIDE -->
+        <div class="d-flex align-items-center gap-3">
+          {% if 'user' in session %}
+
+          <!-- PROFILE DROPDOWN -->
+          <div class="dropdown">
+            <a
+              href="#"
+              class="d-flex align-items-center gap-2 text-white text-decoration-none dropdown-toggle"
+              id="profileDropdown"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <!-- PROFILE IMAGE -->
+              <img
+                src="{{ url_for('static', filename='uploads/' + (session.get('profile_pic') or 'default.png')) }}"
+                class="rounded-circle"
+                width="36"
+                height="36"
+                style="object-fit: cover"
+              />
+
+              <!-- USERNAME (hide on small screens) -->
+              <span class="small d-none d-lg-inline"
+                >{{ session['user'] }}</span
+              >
+            </a>
+
+            <!-- DROPDOWN MENU -->
+            <ul
+              class="dropdown-menu dropdown-menu-end"
+              aria-labelledby="profileDropdown"
+            >
+              <li>
+                <a class="dropdown-item" href="/profile/{{ session['user'] }}">
+                  👤 Profile
+                </a>
+              </li>
+              <!-- CREATE (only show in dropdown on small screens) -->
+              <li class="">
+                <a class="dropdown-item" href="/create-blog"> ✏️ Create </a>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <a class="dropdown-item text-danger" href="/logout">
+                  🚪 Logout
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- CREATE BUTTON (only on lg and above) -->
+
+          {% else %}
+
+<!-- LOGIN (visible everywhere) -->
+<a
+  href="/login"
+  class="btn btn-outline-light btn-sm"
+  data-bs-toggle="modal"
+  data-bs-target="#loginModal"
+>
+  Login
+</a>
+
+<!-- REGISTER (hide on mobile) -->
+<a
+  href="/register"
+  class="btn btn-warning btn-sm d-none d-lg-inline"
+  data-bs-toggle="modal"
+  data-bs-target="#registerModal"
+>
+  Register
+</a>
+
+<!-- ADMIN (hide on mobile) -->
+<a
+  href="/admin-login"
+  class="btn btn-light btn-sm d-lg-inline"
+  data-bs-toggle="modal"
+  data-bs-target="#adminModal"
+>
+  Admin
+</a>
+
+{% endif %}
+          <button id="theme-toggle" class="btn btn-sm btn-outline-light">
+            🌙
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ================= LOGIN MODAL ================= -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+          <div class="modal-body p-4">
+            <div class="text-center mb-4">
+              <div class="mb-2 text-primary fs-1">
+                <i class="fas fa-user-circle"></i>
+              </div>
+              <h3 class="modal-title-main">Welcome Back</h3>
+              <p class="text-muted small">
+                Please enter your details to sign in.
+              </p>
+            </div>
+
+            <form method="POST" action="/login" id="loginForm">
+              <div class="form-floating mb-3">
+                <input
+                  type="text"
+                  name="username"
+                  class="form-control"
+                  id="loginUser"
+                  placeholder="Username"
+                  required
+                />
+                <label for="loginUser">Username</label>
+              </div>
+
+              <div class="form-floating mb-3 position-relative">
+                <input
+                  type="password"
+                  name="password"
+                  class="form-control"
+                  id="loginPassword"
+                  placeholder="Password"
+                  required
+                />
+                <label for="loginPassword">Password</label>
+                <span
+                  class="toggle-password"
+                  onclick="togglePassword('loginPassword', this)"
+                  >👁️</span
+                >
+              </div>
+
+              <button
+                class="btn btn-primary w-100 modern-btn mb-3"
+                type="submit"
+              >
+                Sign In
+              </button>
+            </form>
+
+            <div class="text-center modal-footer-text">
+              Don’t have an account?
+              <a
+                href="#"
+                class="text-primary fw-bold text-decoration-none"
+                data-bs-toggle="modal"
+                data-bs-target="#registerModal"
+                data-bs-dismiss="modal"
+                >Create one</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ================= REGISTER MODAL ================= -->
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+          <div class="modal-body p-4">
+            <div class="text-center mb-4">
+              <div class="mb-2 text-warning fs-1">
+                <i class="fas fa-feather-alt"></i>
+              </div>
+              <h3 class="modal-title-main">Join Inkspire</h3>
+              <p class="text-muted small">Start your journey with us today.</p>
+            </div>
+
+            <form method="POST" action="/register">
+              <div class="form-floating mb-3">
+                <input
+                  type="text"
+                  name="username"
+                  class="form-control"
+                  id="regUser"
+                  placeholder="Username"
+                  required
+                />
+                <label for="regUser">Choose Username</label>
+              </div>
+
+              <div class="form-floating mb-3 position-relative">
+                <input
+                  type="password"
+                  name="password"
+                  class="form-control"
+                  id="regPassword"
+                  placeholder="Password"
+                  required
+                />
+                <label for="regPassword">Create Password</label>
+                <span
+                  class="toggle-password"
+                  onclick="togglePassword('regPassword', this)"
+                  >👁️</span
+                >
+              </div>
+
+              <button
+                class="btn btn-warning w-100 modern-btn text-white mb-3"
+                type="submit"
+              >
+                Create Account
+              </button>
+            </form>
+
+            <div class="text-center modal-footer-text">
+              Already a member?
+              <a
+                href="#"
+                class="text-primary fw-bold text-decoration-none"
+                data-bs-toggle="modal"
+                data-bs-target="#loginModal"
+                data-bs-dismiss="modal"
+                >Login here</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ================= ADMIN MODAL ================= -->
+    <div class="modal fade" id="adminModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal border-top border-4 border-dark">
+          <div class="modal-body p-4">
+            <div class="text-center mb-4">
+              <div class="mb-2 text-dark fs-1">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <h3 class="modal-title-main">Admin Portal</h3>
+              <p class="text-muted small">
+                Restricted access for administrators only.
+              </p>
+            </div>
+
+            <form method="POST" action="/admin-login">
+              <div class="form-floating mb-3">
+                <input
+                  type="text"
+                  name="username"
+                  class="form-control"
+                  id="adminUser"
+                  placeholder="Admin Username"
+                  required
+                />
+                <label for="adminUser">Admin ID</label>
+              </div>
+
+              <div class="form-floating mb-4 position-relative">
+                <input
+                  type="password"
+                  name="password"
+                  class="form-control"
+                  id="adminPassword"
+                  placeholder="Password"
+                  required
+                />
+                <label for="adminPassword">Security Key</label>
+                <span
+                  class="toggle-password"
+                  onclick="togglePassword('adminPassword', this)"
+                  >👁️</span
+                >
+              </div>
+
+              <button class="btn btn-dark w-100 modern-btn" type="submit">
+                Unlock Portal
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= Account Suspended MODAL ================= -->
+    <div class="modal fade" id="bannedModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div
+          class="modal-content modern-modal border-top border-4 border-danger"
+        >
+          <div class="modal-body p-4 text-center">
+            <div class="text-danger fs-1 mb-3">
+              <i class="fas fa-user-slash"></i>
+            </div>
+            <h3 class="modal-title-main">Account Suspended</h3>
+            <p class="text-muted">
+              Your account access has been restricted. Please request an unblock
+              to appeal this decision.
+            </p>
+
+            <div class="mt-4 d-grid gap-2">
+              <button class="btn btn-primary modern-btn" id="requestBtn">
+                Request Unblock
+              </button>
+              <button
+                type="button"
+                class="btn btn-link text-muted btn-sm text-decoration-none"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="requestModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title-main">Appeal Suspension</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body p-4">
+            <textarea
+              id="requestMessage"
+              class="form-control custom-input mb-3"
+              style="height: 120px"
+              placeholder="Explain why your account should be unblocked..."
+              required
+            ></textarea>
+            <button class="btn btn-success w-100 modern-btn" id="submitRequest">
+              Submit Appeal
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container mt-5 mb-2"></div>
+
+    <main class="flex-grow-1">{% block content %} {% endblock %}</main>
+
+    <footer class="main-footer pt-5 mt-5">
+      <div class="container">
+        <div class="row g-4 pb-5">
+          <div class="col-lg-3 col-md-6">
+            <h5 class="fw-bold text-white mb-3">
+              <i class="fas fa-feather-alt text-warning me-2"></i>MyBlog
+            </h5>
+            <p class="small leading-relaxed">
+              Share your thoughts, ideas, and stories with the world. A simple
+              and modern blogging platform built with Flask.
+            </p>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <h6 class="footer-title fw-bold">Explore</h6>
+            <ul class="list-unstyled footer-link-list small">
+              <li>
+                <a href="/" class="text-decoration-none text-reset"
+                  >Home Feed</a
+                >
+              </li>
+              {% if 'user' in session %}
+              <li>
+                <a href="/create-blog" class="text-decoration-none text-reset"
+                  >Create New Blog</a
+                >
+              </li>
+              {% else %}
+              <li>
+                <a
+                  href="#"
+                  class="text-decoration-none text-reset"
+                  data-bs-toggle="modal"
+                  data-bs-target="#loginModal"
+                  >Start Writing</a
+                >
+              </li>
+              {% endif %}
+              <li>
+                <a
+                  href="#"
+                  class="text-decoration-none text-reset"
+                  data-bs-toggle="modal"
+                  data-bs-target="#registerModal"
+                  >Join Community</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <h6 class="footer-title fw-bold">Get In Touch</h6>
+            <div class="small">
+              <p class="mb-3 d-flex align-items-center">
+                <span class="contact-icon"
+                  ><i class="fas fa-envelope"></i
+                ></span>
+                <a
+                  href="mailto:dharmikdipali9@gmail.com"
+                  class="text-decoration-none text-reset"
+                  >dharmikdipali9@gmail.com</a
+                >
+              </p>
+              <p class="mb-3 d-flex align-items-center">
+                <span class="contact-icon"><i class="fas fa-phone"></i></span>
+                <a href="tel:9356745404" class="text-decoration-none text-reset"
+                  >+91 9356745404</a
+                >
+              </p>
+              <p class="mb-0 d-flex align-items-center">
+                <span class="contact-icon"
+                  ><i class="fas fa-map-marker-alt"></i
+                ></span>
+                Nagpur, Maharashtra
+              </p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <h6 class="footer-title fw-bold">Connect With Us</h6>
+            <div class="d-flex gap-2">
+              <a href="#" class="social-btn"
+                ><i class="fab fa-facebook-f"></i
+              ></a>
+              <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
+              <a href="#" class="social-btn"
+                ><i class="fab fa-instagram"></i
+              ></a>
+              <a
+                href="https://www.linkedin.com/in/dipalidharmik/"
+                target="_blank"
+                class="social-btn"
+              >
+                <i class="fab fa-linkedin-in"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="container">
+          <div class="row align-items-center">
+            <div class="col-md-6 text-center text-md-start mb-2 mb-md-0 small">
+              © 2026 <span class="text-white fw-bold">MyBlog</span> All rights
+              Reserved
+            </div>
+            <div class="col-md-6 text-center text-md-end small">
+              Made with <i class="fas fa-heart text-danger mx-1"></i> by
+              <span class="text-white fw-bold">Dipali</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="position-fixed bottom-0 end-0 p-4" style="z-index: 1050">
+        <button id="scrollTopBtn" title="Go to top">
+          <i class="fa fa-chevron-up"></i>
+        </button>
+      </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    {% block scripts %} {% endblock %}
+    <script>
+      const toggle = document.getElementById("theme-toggle");
+      toggle.addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme");
+        const next = current === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+      });
+
+      // Load saved preference
+      const saved = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+
+      const scrollBtn = document.getElementById("scrollTopBtn");
+
+      // Show button when scrolling down
+      window.onscroll = function () {
+        if (
+          document.body.scrollTop > 200 ||
+          document.documentElement.scrollTop > 200
+        ) {
+          scrollBtn.style.display = "block";
+        } else {
+          scrollBtn.style.display = "none";
+        }
+      };
+
+      // Scroll to top when clicked
+      scrollBtn.addEventListener("click", function () {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      });
+
+      function togglePassword(id, el) {
+        const input = document.getElementById(id);
+        if (input.type === "password") {
+          input.type = "text";
+          el.innerText = "🙈";
+        } else {
+          input.type = "password";
+          el.innerText = "👁️";
+        }
+      }
+
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+
+          const res = await fetch("/login", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();  // ✅ MUST be here
+          
+
+          if (data.status === "success") {
+            window.location.href = "/"
+          } else if (data.status === "banned") {
+            // close login modal
+            bootstrap.Modal.getInstance(
+              document.getElementById("loginModal"),
+            ).hide();
+
+            // open banned modal
+            const bannedModal = new bootstrap.Modal(
+              document.getElementById("bannedModal"),
+            );
+            bannedModal.show();
+
+            // store user_id
+            document.getElementById("requestBtn").dataset.userid = data.user_id;
+          } else {
+            alert(data.message);
+          }
+        });
+
+      document
+        .getElementById("requestBtn")
+        .addEventListener("click", function () {
+          bootstrap.Modal.getInstance(
+            document.getElementById("bannedModal"),
+          ).hide();
+
+          const requestModal = new bootstrap.Modal(
+            document.getElementById("requestModal"),
+          );
+          requestModal.show();
+
+          window.currentUserId = this.dataset.userid;
+        });
+
+
+document
+  .getElementById("submitRequest")
+  .addEventListener("click", async function () {
+    const message = document.getElementById("requestMessage").value;
+
+    const res = await fetch("/submit-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: window.currentUserId,
+        message: message,
+      }),
+    });
+
+    const data = await res.json();
+    console.log("Response:", data); // DEBUG
+
+    // ✅ DEFAULT (success UI always)
+    let title = "Request Submitted";
+    let messageText = `
+      Your account will be reviewed and unblocked within <b>24 hours</b>.<br>
+      Please check back later.
+    `;
+
+    // ✅ Only change text if already requested
+    if (data.status === "exists") {
+      title = "Already Requested";
+      messageText = `
+        We already have your request and are working on it.<br>
+        Please wait patiently.
+      `;
+    }
+
+    // remove old modal if exists
+    const oldModal = document.getElementById("successModal");
+    if (oldModal) oldModal.remove();
+
+    // ✅ SAME CLEAN GREEN MODAL (no error UI)
+    const modalHTML = `
+      <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content modern-modal text-center p-4">
+            
+            <div class="text-success fs-1 mb-3">
+              <i class="fas fa-check-circle"></i>
+            </div>
+
+            <h4 class="modal-title-main mb-2">${title}</h4>
+
+            <p class="text-muted">
+              ${messageText}
+            </p>
+
+            <button class="btn btn-success modern-btn mt-3" data-bs-dismiss="modal">
+              OK
+            </button>
+
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+    new bootstrap.Modal(document.getElementById("successModal")).show();
+
+    // close request modal
+    bootstrap.Modal.getInstance(
+      document.getElementById("requestModal")
+    ).hide();
+  });
+        
+    </script>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% for
+    category, message in messages %} {% if category == 'login_success' %}
+    <script>
+      new bootstrap.Modal(document.getElementById("loginModal")).show();
+    </script>
+    {% endif %} {% endfor %} {% endwith %}
+  </body>
+</html>

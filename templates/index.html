@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %} Home Page {% endblock %}
+
+{% block content %}
+
+<div class="mb-4 text-center">
+  <a href="/" class="btn btn-outline-dark btn-sm">All</a>
+  <a href="/?category=Technology" class="btn btn-outline-primary btn-sm">Technology</a>
+  <a href="/?category=Travel" class="btn btn-outline-success btn-sm">Travel</a>
+  <a href="/?category=Food" class="btn btn-outline-danger btn-sm">Food</a>
+  <a href="/?category=Education" class="btn btn-outline-warning btn-sm">Education</a>
+</div>
+
+<div class="container">
+  <div class="row">
+    {% if blog_data|length == 0 %}
+      <div class="text-center mt-5">
+        {% if request.args.get('q') %}
+          <h4>No results found for "{{ request.args.get('q') }}" 😔</h4>
+          <p>Try different keywords...</p>
+        {% elif request.args.get('category') %}
+          <h4>No blogs available in "{{ request.args.get('category') }}" category 😔</h4>
+          <p>Check other categories or create a new blog!</p>
+        {% else %}
+          <h4>No blogs available yet 😔</h4>
+          <p>Be the first to create one!</p>
+        {% endif %}
+      </div>
+    {% endif %}
+      
+    {% for item in blog_data %}
+    <div class="col-md-4 mb-4">
+      <div class="blog-card">
+        <a href="/blog/{{ item.blog.id }}" class="text-decoration-none text-white">
+          <img 
+            src="{% if item.blog.image %}{{ url_for('static', filename='uploads/' + item.blog.image) }}{% else %}https://via.placeholder.com/400x250{% endif %}" 
+            class="blog-img"
+          >
+          <div class="overlay">
+            <div class="overlay-content">
+              <h5 class="mb-1">{{ item.blog.title }}</h5>
+              <small>
+                ✍️ {{ item.blog.author }} <br>
+                📅 {{ item.blog.created_at.strftime("%B %d, %Y") }}
+              </small>
+            </div>
+          </div>
+        </a>
+
+        <button onclick="toggleLike({{ item.blog.id }}, this)" class="like-btn">
+          <span class="heart">
+            {% if item.liked %}❤️{% else %}🤍{% endif %}
+          </span>
+          <span class="count">
+            {{ item.likes }}
+          </span>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="d-flex justify-content-center mt-5">
+  <nav>
+    <ul class="pagination custom-pagination">
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('home', page=pagination.prev_num) }}"><i class="fa fa-angle-left"></i></a></li>
+      {% endif %}
+
+      {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+          <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('home', page=page_num) }}">{{ page_num }}</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('home', page=pagination.next_num) }}"><i class="fa fa-angle-right"></i></a></li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+
+<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1100">
+  <div id="loginToast" class="toast align-items-center text-white border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: #ffc107; color: #0f172a !important;">
+    <div class="d-flex">
+      <div class="toast-body fw-bold">
+        <i class="fas fa-lock me-2"></i>
+        Please login first to like this blog!
+      </div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleLike(blogId, btn) {
+  fetch(`/like/${blogId}`, {
+    method: "POST",
+    credentials: "same-origin"
+  })
+  .then(res => {
+    if (res.status === 401) {
+      const toastElement = document.getElementById('loginToast');
+      const toast = new bootstrap.Toast(toastElement);
+      toast.show();
+      return;
+    }
+    return res.json();
+  })
+  .then(data => {
+    if (!data) return;
+    const heart = btn.querySelector(".heart");
+    const count = btn.querySelector(".count");
+    heart.innerHTML = data.liked ? "❤️" : "🤍";
+    count.innerHTML = data.count;
+  })
+  .catch(err => console.error("Error:", err));
+}
+</script>
+{% endblock %}

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Blog Moderation | Inkspire Admin</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='uploads/favicon.png') }}"/>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --ink-midnight: #0f172a;
+            --ink-gold: #ffc107;
+            --ink-brand-amber: #F2C010; /* Your Requested Color */
+            --ink-bg: #f1f5f9;
+            --sidebar-width: 280px;
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        /* ... existing styles ... */
+        * { box-sizing: border-box; }
+        body { background-color: var(--ink-bg); font-family: 'Plus Jakarta Sans', sans-serif; color: var(--ink-midnight); margin: 0; display: flex; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar { width: var(--sidebar-width); height: 100vh; background: var(--ink-midnight); position: fixed; left: 0; top: 0; padding: 2.5rem 1.5rem; z-index: 1000; display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+        .sidebar h4 { color: #fff; font-weight: 800; margin-bottom: 3.5rem; display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
+        .sidebar h4 i { color: var(--ink-gold); }
+        .nav-link { display: flex; align-items: center; gap: 12px; color: #94a3b8; padding: 14px 18px; border-radius: 14px; margin-bottom: 10px; font-weight: 600; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); transform: translateX(5px); }
+        .nav-link.active { background: var(--ink-gold); color: var(--ink-midnight); box-shadow: 0 10px 20px -5px rgba(255, 193, 7, 0.4); }
+
+        .main-wrapper { margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); min-height: 100vh; padding: 2rem 2.5rem; background: radial-gradient(circle at top right, #ffffff, var(--ink-bg)); }
+
+        .topbar { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 24px; padding: 1rem 2rem; margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--card-shadow); position: sticky; top: 1.5rem; z-index: 900; }
+
+        .data-card { background: #fff; border-radius: 28px; padding: 2rem; border: 1px solid rgba(0,0,0,0.02); box-shadow: var(--card-shadow); }
+
+        .table thead th { background: #f8fafc; border: none; padding: 1.2rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; color: #94a3b8; border-radius: 12px; }
+        .table td { padding: 1.25rem 1rem; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+
+        .blog-thumb { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, var(--ink-midnight), #334155); color: var(--ink-gold); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15); }
+        .blog-title { font-weight: 800; color: var(--ink-midnight); display: block; margin-bottom: 2px; font-size: 1rem; text-decoration: none; }
+        .blog-meta { font-size: 0.75rem; color: #94a3b8; font-weight: 600; font-family: monospace; }
+
+        .status-pill { padding: 6px 14px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px; }
+        .status-published { background: #ecfdf5; color: #059669; border: 1px solid #10b98120; }
+
+        .btn-action { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-decoration: none; margin-left: 8px; border: 1px solid #f1f5f9; }
+        .btn-view { background: #f8fafc; color: var(--ink-midnight); }
+        .btn-view:hover { background: var(--ink-midnight); color: #fff; transform: translateY(-3px) scale(1.05); }
+        .btn-del { background: #fff1f2; color: #e11d48; border-color: #fee2e2; }
+        .btn-del:hover { background: #e11d48; color: #fff; transform: translateY(-3px) scale(1.05); }
+
+        .search-input { background: #fff; border: 1px solid #e2e8f0; border-radius: 15px; padding: 10px 20px; width: 320px; font-weight: 500; transition: 0.3s; }
+
+        /* ===== SWEETALERT THEME OVERRIDES ===== */
+        .swal2-popup { border-radius: 28px !important; padding: 1.2rem !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }
+        .swal2-title { font-weight: 600 !important; color: var(--ink-midnight) !important; }
+        .swal2-confirm { background-color: var(--ink-midnight) !important; border-radius: 14px !important; padding: 12px 30px !important; font-weight: 700 !important; }
+        .swal2-cancel { border-radius: 14px !important; padding: 12px 30px !important; font-weight: 700 !important; }
+        
+        /* THE RING COLOR #F2C010 */
+        .swal2-icon.swal2-warning, 
+        .swal2-icon.swal2-info, 
+        .swal2-icon.swal2-question,
+        .swal2-icon.swal2-success {
+            border-color: var(--ink-brand-amber) !important;
+            color: var(--ink-brand-amber) !important;
+        }
+        /* Success checkmark specific color */
+        .swal2-icon.swal2-success [class^='swal2-success-line'] { background-color: var(--ink-brand-amber) !important; }
+        .swal2-icon.swal2-success .swal2-success-ring { border: .25em solid rgba(242, 192, 16, .3) !important; }
+
+        @media (max-width: 992px) { .sidebar { transform: translateX(-100%); transition: 0.3s; } .sidebar.active { transform: translateX(0); } .main-wrapper { margin-left: 0; width: 100%; padding: 1.5rem; } }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar" id="sidebar">
+    <h4><i class="bi bi-feather"></i> Inkspire</h4>
+    <nav class="nav flex-column">
+        <a href="/admin" class="nav-link"><i class="bi bi-grid-fill"></i> Dashboard</a>
+        <a href="/admin/users" class="nav-link"><i class="bi bi-people-fill"></i> Users</a>
+        <a href="/admin/blogs" class="nav-link active"><i class="bi bi-file-earmark-post-fill"></i> Blogs</a>
+        <a href="/admin/comments" class="nav-link"><i class="bi bi-chat-square-dots-fill"></i> Comments</a>
+        <a href="/admin/reports" class="nav-link d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-shield-fill-exclamation"></i> Reports</span>
+            {% if report_count > 0 %}<span class="badge bg-danger rounded-pill">{{ report_count }}</span>{% endif %}
+        </a>
+        <a href="/admin/requests" class="nav-link d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-envelope-paper-fill"></i> Requests</span>
+          {% if request_count > 0 %}
+          <span class="badge bg-warning text-dark rounded-pill">{{ request_count }}</span>
+          {% endif %}
+        </a>
+    </nav>
+    <div class="mt-auto">
+        <a href="/admin-logout" class="nav-link text-danger"><i class="bi bi-power"></i> Logout</a>
+    </div>
+</aside>
+
+<main class="main-wrapper">
+    <header class="topbar">
+        <div>
+            <h5 class="fw-800 mb-0">Editorial Desk</h5>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small">Moderate community stories</span>
+            </div>
+        </div>
+        <button class="btn d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list fs-2"></i></button>
+    </header>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <input type="text" class="search-input" placeholder="Search stories or authors..." id="blogSearch">
+        <button onclick="exportTableToCSV('inkspire-editorial-export.csv')" class="btn btn-white border rounded-pill px-3 fw-bold small shadow-sm">
+            <i class="bi bi-download me-2"></i>Export CSV
+        </button>
+    </div>
+
+    <div class="data-card">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Story Identity</th>
+                        <th>Author</th>
+                        <th>Timeline</th>
+                        <th>Status</th>
+                        <th class="text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="blogTableBody">
+                    {% for blog in blogs %}
+                    <tr>
+                        <td class="ps-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="blog-thumb">{{ blog.title[0]|upper }}</div>
+                                <div>
+                                    <a href="/blog/{{ blog.id }}" class="blog-title text-decoration-none">{{ blog.title }}</a>
+                                    <span class="blog-meta">REF: #{{ blog.id }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><div class="fw-800">{{ blog.author }}</div></td>
+                        <td><div class="fw-700">{{ blog.created_at.strftime('%b %d, %Y') }}</div></td>
+                        <td><span class="status-pill status-published"><i class="bi bi-broadcast me-1"></i> Live</span></td>
+                        <td class="text-end pe-3">
+                            <a href="/blog/{{ blog.id }}" class="btn-action btn-view"><i class="bi bi-eye-fill"></i></a>
+                            <a href="javascript:void(0)" 
+                               onclick="confirmDelete('{{ blog.id }}', '{{ blog.title|replace("'", "\\'") }}')" 
+                               class="btn-action btn-del">
+                                <i class="bi bi-trash3-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+    // SWEETALERT MODAL
+    function confirmDelete(blogId, blogTitle) {
+        Swal.fire({
+            title: 'Archive Story?',
+            text: `You are about to remove "${blogTitle}" from the public feed.`,
+            icon: 'warning',
+            iconColor: '#F2C010',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Archive It',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#0f172a',
+            cancelButtonColor: '#f1f5f9',
+            reverseButtons: true,
+            customClass: {
+                cancelButton: 'text-dark'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/admin/delete-blog/${blogId}`;
+            }
+        });
+    }
+
+    // Story Search Filter
+    document.getElementById('blogSearch').addEventListener('keyup', function() {
+        let val = this.value.toLowerCase();
+        document.querySelectorAll('#blogTableBody tr').forEach(row => {
+            let title = row.querySelector('.blog-title').innerText.toLowerCase();
+            let author = row.querySelector('.fw-800').innerText.toLowerCase();
+            row.style.display = (title.includes(val) || author.includes(val)) ? '' : 'none';
+        });
+    });
+
+    // CSV Export (Simplified Clean Data)
+    function exportTableToCSV(filename) {
+        let csv = [];
+        const rows = document.querySelectorAll("table tr");
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].style.display === 'none') continue;
+            let row = [];
+            const cols = rows[i].querySelectorAll("td, th");
+            for (let j = 0; j < cols.length - 1; j++) {
+                let data = cols[j].innerText.replace(/[^\x00-\x7F]/g, "").trim();
+                row.push('"' + data + '"');
+            }
+            csv.push(row.join(","));
+        }
+        const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+        const downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
+</script>
+</body>
+</html>

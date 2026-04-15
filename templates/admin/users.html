@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>User Management | Inkspire Admin</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='uploads/favicon.png') }}"
+    />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+      :root {
+        --ink-midnight: #0f172a;
+        --ink-gold: #ffc107;
+        --ink-bg: #f1f5f9;
+        --sidebar-width: 280px;
+        --card-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.05),
+          0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: var(--ink-bg);
+        font-family: "Plus Jakarta Sans", sans-serif;
+        color: var(--ink-midnight);
+        margin: 0;
+        display: flex;
+      }
+
+      /* ===== SIDEBAR ===== */
+      .sidebar {
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: var(--ink-midnight);
+        position: fixed;
+        left: 0;
+        top: 0;
+        padding: 2.5rem 1.5rem;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar h4 {
+        color: #fff;
+        font-weight: 800;
+        margin-bottom: 3.5rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        letter-spacing: -0.5px;
+      }
+
+      .sidebar h4 i {
+        color: var(--ink-gold);
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #94a3b8;
+        padding: 14px 18px;
+        border-radius: 14px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .nav-link:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateX(5px);
+      }
+
+      .nav-link.active {
+        background: var(--ink-gold);
+        color: var(--ink-midnight);
+        box-shadow: 0 10px 20px -5px rgba(255, 193, 7, 0.4);
+      }
+
+      /* ===== MAIN CONTENT ===== */
+      .main-wrapper {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+        min-height: 100vh;
+        padding: 2rem 2.5rem;
+        background: radial-gradient(
+          circle at top right,
+          #ffffff,
+          var(--ink-bg)
+        );
+      }
+
+      .topbar {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 24px;
+        padding: 1rem 2rem;
+        margin-bottom: 2.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: var(--card-shadow);
+        position: sticky;
+        top: 1.5rem;
+        z-index: 900;
+      }
+
+      .data-card {
+        background: #fff;
+        border-radius: 28px;
+        padding: 2rem;
+        border: 1px solid rgba(0, 0, 0, 0.02);
+        box-shadow: var(--card-shadow);
+      }
+
+      .table thead th {
+        background: #f8fafc;
+        border: none;
+        padding: 1.2rem;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 700;
+        color: #94a3b8;
+        border-radius: 12px;
+      }
+
+      .table td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+      }
+
+      .user-id {
+        background: #f1f5f9;
+        color: #64748b;
+        padding: 5px 12px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 0.75rem;
+        font-family: monospace;
+      }
+
+      .avatar-box {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, var(--ink-midnight), #334155);
+        color: var(--ink-gold);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.1rem;
+      }
+
+      .badge-pill {
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.75rem;
+      }
+      .badge-active {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #10b98120;
+      }
+      .badge-banned {
+        background: #fff1f2;
+        color: #e11d48;
+        border: 1px solid #e11d4820;
+      }
+
+      .btn-action {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        border: none;
+        margin-left: 8px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      .btn-ban {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .btn-ban:hover {
+        background: var(--ink-gold);
+        color: var(--ink-midnight);
+        transform: rotate(-15deg);
+      }
+
+      .btn-del {
+        background: #ffe4e6;
+        color: #e11d48;
+      }
+      .btn-del:hover {
+        background: #e11d48;
+        color: #fff;
+        transform: scale(1.1);
+      }
+
+      .filter-section {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 2rem;
+      }
+
+      .search-input {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 10px 20px;
+        width: 300px;
+        font-weight: 500;
+        transition: 0.3s;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: var(--ink-gold);
+        box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.1);
+      }
+
+      /* ===== SWEETALERT GOLD THEME ===== */
+      /* ===== SWEETALERT #F2C010 CUSTOMIZATION ===== */
+      .swal2-popup {
+        border-radius: 24px !important;
+        font-family: "Plus Jakarta Sans", sans-serif !important;
+      }
+
+      /* Target the rings for Info, Success, and Warning */
+      .swal2-icon.swal2-info,
+      .swal2-icon.swal2-warning,
+      .swal2-icon.swal2-success,
+      .swal2-icon.swal2-question {
+        border-color: #f2c010 !important;
+        color: #f2c010 !important;
+      }
+      .swal2-title {
+        font-weight: 700 !important;
+        font-size: 1.5rem !important;
+        color: #0f172a !important; /* Ink Midnight */
+        letter-spacing: -0.5px;
+      }
+
+      /* Target the success icon internal lines specifically */
+      .swal2-icon.swal2-success [class^="swal2-success-line"] {
+        background-color: #f2c010 !important;
+      }
+      .swal2-icon.swal2-success .swal2-success-ring {
+        border: 0.25em solid rgba(242, 192, 16, 0.3) !important;
+      }
+
+      .swal2-confirm {
+        background-color: var(--ink-midnight) !important;
+        border-radius: 12px !important;
+      }
+
+      @media (max-width: 992px) {
+        .sidebar {
+          transform: translateX(-100%);
+        }
+        .sidebar.active {
+          transform: translateX(0);
+        }
+        .main-wrapper {
+          margin-left: 0;
+          width: 100%;
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <h4><i class="bi bi-feather"></i> Inkspire</h4>
+      <nav class="nav flex-column">
+        <a href="/admin" class="nav-link"
+          ><i class="bi bi-grid-fill"></i> Dashboard</a
+        >
+        <a href="/admin/users" class="nav-link active"
+          ><i class="bi bi-people-fill"></i> Users</a
+        >
+        <a href="/admin/blogs" class="nav-link"
+          ><i class="bi bi-file-earmark-post-fill"></i> Blogs</a
+        >
+        <a href="/admin/comments" class="nav-link"
+          ><i class="bi bi-chat-square-dots-fill"></i> Comments</a
+        >
+        <a
+          href="/admin/reports"
+          class="nav-link d-flex justify-content-between align-items-center"
+        >
+          <span><i class="bi bi-shield-fill-exclamation"></i> Reports</span>
+          {% if report_count > 0 %}<span class="badge bg-danger rounded-pill"
+            >{{ report_count }}</span
+          >{% endif %}
+        </a>
+        <a
+          href="/admin/requests"
+          class="nav-link d-flex justify-content-between align-items-center"
+        >
+          <span><i class="bi bi-envelope-paper-fill"></i> Requests</span>
+          {% if request_count > 0 %}
+          <span class="badge bg-warning text-dark rounded-pill"
+            >{{ request_count }}</span
+          >
+          {% endif %}
+        </a>
+      </nav>
+      <div class="mt-auto">
+        <a href="/admin-logout" class="nav-link text-danger"
+          ><i class="bi bi-power"></i> Logout</a
+        >
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <header class="topbar">
+        <div>
+          <h5 class="fw-800 mb-0">User Management</h5>
+          <p class="text-muted small mb-0">
+            Total Accounts: <strong>{{ users|length }}</strong>
+          </p>
+        </div>
+        <button class="btn d-lg-none" onclick="toggleSidebar()">
+          <i class="bi bi-list fs-2"></i>
+        </button>
+      </header>
+
+      <div
+        class="filter-section d-flex justify-content-between align-items-center w-100"
+      >
+       
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by username..."
+            id="userSearch"
+          />
+     
+        <button
+          onclick="exportUsersToCSV('inkspire-user-registry.csv')"
+          class="btn btn-outline-dark rounded-pill px-4 fw-bold shadow-sm"
+        >
+          <i class="bi bi-download me-2"></i>Export CSV
+        </button>
+      </div>
+
+      <div class="data-card">
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Reference ID</th>
+                <th>User Identity</th>
+                <th>Account Status</th>
+                <th class="text-end">Administrative Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <td><span class="user-id">ID-{{ user.id }}</span></td>
+                <td>
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-box">{{ user.username[0]|upper }}</div>
+                    <div>
+                      <span class="fw-800 d-block">{{ user.username }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {% if user.is_banned %}
+                  <span class="badge badge-pill badge-banned">Banned</span>
+                  {% else %}
+                  <span class="badge badge-pill badge-active">Active</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <a
+                    href="javascript:void(0)"
+                    onclick="confirmAction('ban', '{{ user.id }}', '{{ user.username }}')"
+                    class="btn-action btn-ban"
+                    ><i class="bi bi-shield-lock-fill"></i
+                  ></a>
+                  <a
+                    href="javascript:void(0)"
+                    onclick="confirmAction('delete', '{{ user.id }}', '{{ user.username }}')"
+                    class="btn-action btn-del"
+                    ><i class="bi bi-trash3-fill"></i
+                  ></a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      function toggleSidebar() {
+          document.getElementById('sidebar').classList.toggle('active');
+      }
+      function confirmAction(type, userId, username) {
+          const config = {
+              delete: {
+                  title: 'Confirm Deletion',
+                  text: `Are you sure you want to permanently delete ${username}?`,
+                  icon: 'warning',
+                  confirmColor: '#e11d48',
+                  url: `/admin/delete-user/${userId}`
+              },
+              ban: {
+                  title: 'Update Access',
+                  text: `Change the restriction status for ${username}?`,
+                  icon: 'info',
+                  confirmColor: '#0f172a',
+                  url: `/admin/toggle-ban/${userId}`
+              }
+          };
+
+          const action = config[type];
+
+          Swal.fire({
+              title: action.title,
+              text: action.text,
+              icon: action.icon,
+              iconColor: (type === 'ban') ? '#ffc107' : '#e11d48', // This sets the symbol color
+              showCancelButton: true,
+              confirmButtonColor: action.confirmColor,
+              cancelButtonColor: '#f1f5f9',
+              confirmButtonText: 'Confirm',
+              cancelButtonText: '<span style="color: #64748b">Cancel</span>',
+              reverseButtons: true
+          }).then((result) => {
+              if (result.isConfirmed) {
+                  window.location.href = action.url;
+              }
+          });
+      }
+
+      // Flash Messages (Success = Gold Toast)
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true
+            }).fire({
+              icon: "{{ 'success' if category == 'success' else 'error' }}",
+              iconColor: '#ffc107',
+              title: "{{ message }}"
+            });
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      // Search Logic
+      document.getElementById('userSearch').addEventListener('keyup', function() {
+          let value = this.value.toLowerCase();
+          document.querySelectorAll('tbody tr').forEach(row => {
+              let username = row.querySelector('.fw-800').textContent.toLowerCase();
+              row.style.display = username.includes(value) ? '' : 'none';
+          });
+      });
+
+       // CSV Export
+
+    function exportUsersToCSV(filename) {
+
+        let csv = [];
+
+        const rows = document.querySelectorAll("table tr");
+
+        for (let i = 0; i < rows.length; i++) {
+
+            if (rows[i].style.display === 'none') continue;
+
+            let rowData = [];
+
+            const cols = rows[i].querySelectorAll("td, th");
+
+            for (let j = 0; j < cols.length; j++) {
+
+                let data = "";
+
+                if (j === 1 && i > 0) {
+
+                    const usernameEl = cols[j].querySelector(".fw-800");
+
+                    data = usernameEl ? usernameEl.innerText : "";
+
+                } else if (j === 2 && i > 0) {
+
+                    const statusEl = cols[j].querySelector(".badge");
+
+                    data = statusEl ? statusEl.innerText : "";
+
+                } else {
+
+                    data = cols[j].innerText;
+
+                }
+
+                data = data.replace(/[^\x00-\x7F]/g, "").replace(/(\r\n|\n|\r)/gm, " ").trim().replace(/"/g, '""');
+
+                if (j < cols.length - 1) rowData.push('"' + data + '"');
+
+            }
+
+            csv.push(rowData.join(","));
+
+        }
+
+        const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+
+        const downloadLink = document.createElement("a");
+
+        downloadLink.download = filename;
+
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+
+        document.body.appendChild(downloadLink);
+
+        downloadLink.click();
+
+        document.body.removeChild(downloadLink);
+
+    }
+    </script>
+  </body>
+</html>

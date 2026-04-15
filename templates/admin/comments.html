@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Comment Moderation | Inkspire Admin</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='uploads/favicon.png') }}"/>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --ink-midnight: #0f172a;
+            --ink-gold: #ffc107;
+            --ink-bg: #f1f5f9;
+            --ink-danger: #e11d48;
+            --sidebar-width: 280px;
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--ink-bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--ink-midnight);
+            margin: 0;
+            display: flex;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--ink-midnight);
+            position: fixed;
+            left: 0; top: 0;
+            padding: 2.5rem 1.5rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h4 { color: #fff; font-weight: 800; margin-bottom: 3.5rem; display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
+        .sidebar h4 i { color: var(--ink-gold); }
+
+        .nav-link {
+            display: flex;
+            align-items: center; gap: 12px;
+            color: #94a3b8; padding: 14px 18px;
+            border-radius: 14px; margin-bottom: 10px;
+            font-weight: 600; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); transform: translateX(5px); }
+        .nav-link.active { background: var(--ink-gold); color: var(--ink-midnight); box-shadow: 0 10px 20px -5px rgba(255, 193, 7, 0.4); }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            padding: 2rem 2.5rem;
+            background: radial-gradient(circle at top right, #ffffff, var(--ink-bg));
+        }
+
+        .topbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            padding: 1rem 2rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--card-shadow);
+            position: sticky;
+            top: 1.5rem;
+            z-index: 900;
+        }
+
+        .data-card {
+            background: #fff;
+            border-radius: 28px;
+            padding: 2rem;
+            border: 1px solid rgba(0,0,0,0.02);
+            box-shadow: var(--card-shadow);
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            border: none;
+            padding: 1.2rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 700;
+            color: #94a3b8;
+            border-radius: 12px;
+        }
+
+        .table td { padding: 1.5rem 1rem; vertical-align: top; border-bottom: 1px solid #f1f5f9; }
+
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--ink-midnight), #334155);
+            color: var(--ink-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1);
+        }
+
+        .comment-bubble {
+            background: #f8fafc;
+            padding: 16px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #334155;
+            line-height: 1.6;
+            border: 1px solid #eef2f6;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .blog-link {
+            font-size: 0.75rem;
+            color: var(--ink-midnight);
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            padding: 6px 12px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+        .blog-link:hover { background: var(--ink-midnight); color: #fff; }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 50px;
+            text-transform: uppercase;
+        }
+        .status-approved { background: #ecfdf5; color: #059669; border: 1px solid #10b98120; }
+        .status-pending { background: #fffbeb; color: #d97706; border: 1px solid #f59e0b20; }
+
+        .btn-action {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            border: 1px solid #f1f5f9;
+        }
+
+        .btn-approve { background: #f0fdf4; color: #16a34a; margin-right: 8px; border-color: #dcfce7; }
+        .btn-approve:hover { background: #16a34a; color: #fff; transform: translateY(-3px); }
+        
+        .btn-del { background: #fff1f2; color: #e11d48; border-color: #fee2e2; }
+        .btn-del:hover { background: #e11d48; color: #fff; transform: translateY(-3px); }
+
+        .search-input {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 10px 20px;
+            width: 100%;
+            max-width: 400px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+        .search-input:focus { outline: none; border-color: var(--ink-gold); box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.1); }
+
+        /* ===== THEMED SWEETALERT CUSTOMIZATION ===== */
+            /* Inkspire Alert Customization */
+    .swal2-popup {
+        background: #ffffff !important;
+        border-radius: 28px !important; /* Matches your data-card radius */
+        padding: 1rem !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        border: 1px solid rgba(15, 23, 42, 0.05) !important;
+    }
+
+    .swal2-title {
+        font-weight: 700 !important;
+        font-size: 1.5rem !important;
+        color: #0f172a !important; /* Ink Midnight */
+        letter-spacing: -0.5px;
+    }
+
+    .swal2-html-container {
+        color: #64748b !important; /* Muted text */
+        font-weight: 500 !important;
+        line-height: 1.6 !important;
+    }
+
+    /* Primary Action (Midnight + Gold Text) */
+    .swal2-confirm {
+        background-color: #0f172a !important; /* Midnight */
+        color: #ffc107 !important; /* Gold */
+        border-radius: 14px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        padding: 12px 32px !important;
+        box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2) !important;
+    }
+
+    /* Cancel Action (Light Slate) */
+    .swal2-cancel {
+        background-color: #f1f5f9 !important;
+        color: #64748b !important;
+        border-radius: 14px !important;
+        font-weight: 700 !important;
+        padding: 12px 32px !important;
+    }
+
+    /* Warning/Success Icon Colors */
+    .swal2-icon.swal2-warning {
+        border-color: #ffc107 !important;
+        color: #ffc107 !important;
+    }
+
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .main-wrapper { margin-left: 0; width: 100%; padding: 1.5rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar" id="sidebar">
+    <h4><i class="bi bi-feather"></i> Inkspire</h4>
+    <nav class="nav flex-column">
+        <a href="/admin" class="nav-link"><i class="bi bi-grid-fill"></i> Dashboard</a>
+        <a href="/admin/users" class="nav-link"><i class="bi bi-people-fill"></i> Users</a>
+        <a href="/admin/blogs" class="nav-link"><i class="bi bi-file-earmark-post-fill"></i> Blogs</a>
+        <a href="/admin/comments" class="nav-link active"><i class="bi bi-chat-square-dots-fill"></i> Comments</a>
+        <a href="/admin/reports" class="nav-link d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-shield-fill-exclamation"></i> Reports</span>
+            {% if report_count > 0 %}<span class="badge bg-danger rounded-pill">{{ report_count }}</span>{% endif %}
+        </a>
+        <a href="/admin/requests" class="nav-link d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-envelope-paper-fill"></i> Requests</span>
+          {% if request_count > 0 %}
+          <span class="badge bg-warning text-dark rounded-pill">{{ request_count }}</span>
+          {% endif %}
+        </a>
+    </nav>
+    <div class="mt-auto">
+        <a href="/admin-logout" class="nav-link text-danger"><i class="bi bi-power"></i> Logout</a>
+    </div>
+</aside>
+
+<main class="main-wrapper">
+    <header class="topbar">
+        <div>
+            <h5 class="fw-800 mb-0">Platform Discourse</h5>
+            <p class="text-muted small mb-0">Reviewing {{ comments|length }} total interactions</p>
+        </div>
+        <button class="btn d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list fs-2"></i></button>
+    </header>
+
+    <div class="mb-4">
+        <input type="text" class="search-input shadow-sm" placeholder="Filter by user or keyword..." id="commentSearch">
+    </div>
+
+    <div class="data-card">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4">User</th>
+                        <th>Comment Text</th>
+                        <th>Origin</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="commentTableBody">
+                    {% for comment in comments %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="author-avatar">{{ comment.author[0]|upper if comment.author else 'U' }}</div>
+                                <span class="fw-800 small text-uppercase" style="letter-spacing: 0.5px;">{{ comment.author }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="comment-bubble">
+                                <span class="text-content">{{ comment.text }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="/blog/{{ comment.blog_id }}" class="blog-link">
+                                <i class="bi bi-box-arrow-up-right"></i> View Post
+                            </a>
+                        </td>
+                        <td>
+                            {% if comment.is_approved %}
+                            <span class="status-badge status-approved"><i class="bi bi-check-circle-fill"></i> Live</span>
+                            {% else %}
+                            <span class="status-badge status-pending"><i class="bi bi-clock-fill"></i> Held</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="d-flex justify-content-end">
+                                {% if not comment.is_approved %}
+                                <a href="javascript:void(0)" 
+                                   onclick="confirmCommentAction('approve', {{ comment.id }})" 
+                                   class="btn-action btn-approve" title="Approve Comment">
+                                    <i class="bi bi-check2"></i>
+                                </a>
+                                {% endif %}
+                                <a href="javascript:void(0)" 
+                                   onclick="confirmCommentAction('delete', {{ comment.id }})" 
+                                   class="btn-action btn-del" 
+                                   title="Delete Comment">
+                                     <i class="bi bi-trash3-fill"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+    }
+
+    // Themed SweetAlerts
+    function confirmCommentAction(type, id) {
+    const isApprove = type === 'approve';
+    
+    Swal.fire({
+        title: isApprove ? 'Approve Interaction?' : 'Remove Comment?',
+        text: isApprove 
+            ? 'This will push the comment live to the Inkspire community.' 
+            : 'Are you sure? This interaction will be permanently archived.',
+        icon: isApprove ? 'question' : 'warning',
+        iconColor: isApprove ? '#0f172a' : '#e11d48', // Midnight for approve, Red for delete
+        showCancelButton: true,
+        confirmButtonText: isApprove ? 'Proceed' : 'Delete Now',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        
+        // Dynamic styling for the confirm button
+        didOpen: () => {
+            const confirmBtn = Swal.getConfirmButton();
+            if (!isApprove) {
+                confirmBtn.style.backgroundColor = '#e11d48'; // Danger red
+                confirmBtn.style.color = '#ffffff';
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Success Toast before redirect
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: isApprove ? 'Comment Approved' : 'Comment Deleted',
+                showConfirmButton: false,
+                timer: 1500,
+                background: '#0f172a',
+                color: '#ffc107'
+            }).then(() => {
+                window.location.href = isApprove 
+                    ? `/admin/approve-comment/${id}` 
+                    : `/admin/delete-comment/${id}`;
+            });
+        }
+    });
+}
+
+    // Comment Search Filter
+    document.getElementById('commentSearch').addEventListener('keyup', function() {
+        let val = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#commentTableBody tr');
+        
+        rows.forEach(row => {
+            let author = row.querySelector('.fw-800').innerText.toLowerCase();
+            let text = row.querySelector('.text-content').innerText.toLowerCase();
+            row.style.display = (author.includes(val) || text.includes(val)) ? '' : 'none';
+        });
+    });
+</script>
+
+</body>
+</html>

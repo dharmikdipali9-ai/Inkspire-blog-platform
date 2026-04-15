@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <title>Page Not Found | Inkspire</title>
+
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/bootstrap.min.css') }}"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+
+  <style>
+    body {
+      background: #0f172a;
+      color: #f1f5f9;
+      font-family: "Poppins", sans-serif;
+    }
+
+    .error-container {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex-direction: column;
+    }
+
+    .error-code {
+      font-size: 120px;
+      font-weight: 800;
+      color: #fbbf24;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .error-text {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .error-desc {
+      color: #94a3b8;
+      margin-bottom: 25px;
+    }
+
+    .btn-home {
+      background: #fbbf24;
+      color: #0f172a;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .btn-home:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(251,191,36,0.3);
+    }
+
+    .icon {
+      font-size: 50px;
+      margin-bottom: 15px;
+      color: #f87171;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="error-container">
+
+    <div class="icon">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+
+    <div class="error-code">404</div>
+
+    <div class="error-text">Oops! Page not found</div>
+
+    <div class="error-desc">
+      The page you’re looking for doesn’t exist or may have been moved.
+    </div>
+
+    <a href="/" class="btn btn-home">
+      <i class="fas fa-arrow-left me-2"></i>Back to Home
+    </a>
+
+  </div>
+</body>
+</html>
