@@ -30,13 +30,14 @@ Inkspire is a modern full-stack blogging platform built using Flask, designed to
 - Modal-based Authentication (No page reload)
 - Flash Messages & Alerts
 
-...
+
+
 
 ## 🚀 Live Demo
 
 👉 Live Website: https://inkspire-blog-platform-2-sfh3.onrender.com/
 
-...
+
 
 
 ## 📸 Screenshots   👈 ADD HERE
