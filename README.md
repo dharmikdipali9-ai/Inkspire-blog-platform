@@ -35,7 +35,7 @@ Inkspire is a modern full-stack blogging platform built using Flask, designed to
 
 ## 🚀 Live Demo
 
-👉 Live Website: https://inkspire-blog-platform-2-sfh3.onrender.com/
+👉 Live Website: https://inkspire-blog-platform-bkhr.onrender.com/
 
 
 
