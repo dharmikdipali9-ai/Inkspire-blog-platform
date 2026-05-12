@@ -11,7 +11,10 @@ from sqlalchemy import func
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///blog.db"
+)
 app.config['SECRET_KEY'] = "dipali_blog"
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app)
@@ -284,7 +287,7 @@ def like_blog(blog_id):
     if 'user' not in session:
         return jsonify({"error": "login required"}), 401
 
-    user_id = session['user']
+    user_id = session['user_id']
 
     like = Like.query.filter_by(user_id=user_id, blog_id=blog_id).first()
 
@@ -526,9 +529,11 @@ def admin_dashboard():
 
     # 👥 Users Per Month (NEW Bar Chart)
     users_per_month = db.session.query(
-        func.strftime('%Y-%m', User.created_at),  # SQLite
+        func.to_char(User.created_at, 'YYYY-MM'),
         func.count(User.id)
-    ).group_by(func.strftime('%Y-%m', User.created_at)).all()
+    ).group_by(
+        func.to_char(User.created_at, 'YYYY-MM')
+    ).all()
 
     user_months = [i[0] for i in users_per_month]
     user_counts = [i[1] for i in users_per_month]
@@ -689,14 +694,14 @@ def resolve_report(report_id):
 @app.route('/admin/update-username', methods=['POST'])
 @admin_required
 def update_username():
-    user = User.query.get(session['user_id'])
+    user = User.query.get(session['admin_id'])
     new_username = request.form['username'].strip()
 
     if not new_username:
         flash("Username cannot be empty!", "danger")
         return redirect('/admin')
 
-    user.name = new_username
+    user.username = new_username
     db.session.commit()
     session['user'] = new_username  # update session
     flash("Username updated successfully!", "success")
@@ -790,9 +795,6 @@ def delete_multiple_requests():
 def page_not_found(e):
     return render_template("404.html"), 404
 
-@app.errorhandler(500)
-def internal_error(e):
-    return render_template("404.html"), 500
 
 if __name__ == "__main__":
     app.run()
